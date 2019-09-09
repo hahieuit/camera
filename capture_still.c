@@ -180,8 +180,8 @@ int v4l_capture_setup(int * fd_v4l)
                 return -1;
         }
 
-        sleep(3);
-        printf("capturing after 3 seconds");
+        sleep(1);
+        printf("capturing after 1 seconds");
 	parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	parm.parm.capture.timeperframe.numerator = 1;
 	parm.parm.capture.timeperframe.denominator = g_camera_framerate;
