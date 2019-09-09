@@ -89,7 +89,7 @@ static int g_bpp = 16;
 static int g_camera_framerate = 30;
 static int g_capture_mode = 1;
 static char g_v4l_device[100] = "/dev/video0";
-static const char *classPathName = "com/android/Camera/Native";
+static const char *classPathName = "com/example/capturestill";
 
 enum results{failed=-1, success, file_already_exist};
 
@@ -229,12 +229,12 @@ int v4l_capture_image(int fd_v4l, const char *still_file)
         struct stat buffer;
 
         /* if file already exist just return file_already_exist do not overwrite the file*/
-        int exist = stat(&still_file,&buffer);
+        int exist = stat(still_file,&buffer);
         if(exist == 0) {
             return file_already_exist;
         }
 
-        if ((fd_still = open(&still_file, O_RDWR | O_CREAT | O_TRUNC, 0x0666)) < 0) {
+        if ((fd_still = open(still_file, O_RDWR | O_CREAT | O_TRUNC, 0x0666)) < 0) {
                 printf("Unable to create y frame recording file\n");
                 return -1;
         }
@@ -303,7 +303,7 @@ capture_still(JNIEnv* env, jobject thiz, jstring path, jstring filename) {
 
     strcpy(still_file, path);
     strcat(still_file, filename);
-    ret = v4l_capture_image(fd_v4l, &still_file);
+    ret = v4l_capture_image(fd_v4l, still_file);
 
     return ret;
 
@@ -316,27 +316,29 @@ static JNINativeMethod methods[] = {
 /*
  * Register several native methods for one class.
  */
+/*
 static int registerNativeMethods(JNIEnv* env, const char* className,
     JNINativeMethod* gMethods, int numMethods)
 {
     jclass clazz;
-    clazz = env->FindClass(className);
+    clazz = (*env)->FindClass(className, "camera_native_methds");
     if (clazz == NULL) {
         ALOGE("Native registration unable to find class '%s'", className);
         return JNI_FALSE;
     }
-    if (env->RegisterNatives(clazz, gMethods, numMethods) < 0) {
+    if ((*env)->RegisterNatives(clazz, gMethods, numMethods, ) < 0) {
         ALOGE("RegisterNatives failed for '%s'", className);
         return JNI_FALSE;
     }
     return JNI_TRUE;
 }
-
+*/
 /*
  * Register native methods for all classes we know about.
  *
  * returns JNI_TRUE on success.
  */
+/*
 static int registerNatives(JNIEnv* env)
 {
   if (!registerNativeMethods(env, classPathName,
@@ -345,11 +347,12 @@ static int registerNatives(JNIEnv* env)
   }
   return JNI_TRUE;
 }
+*/
 // ----------------------------------------------------------------------------
 /*
  * This is called by the VM when the shared library is first loaded.
  */
-
+/*
 typedef union {
     JNIEnv* env;
     void* venv;
@@ -378,3 +381,34 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 bail:
     return result;
 }
+*/
+
+jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+    JNIEnv *env;
+    jclass  cls;
+    jint    res;
+
+    (void)reserved;
+
+    printf("JNI_OnLoad libOv7740");
+    if ((*vm)->GetEnv(vm, (void **)&env, JNI_VERSION_1_4) != JNI_OK){
+        printf("ERROR: GetEnv failed"); 
+        return -1;
+    }
+
+    cls = (*env)->FindClass(env, classPathName);
+    if (cls == NULL) {
+        printf("ERROR: FindClass failed");
+        return -1;
+    }
+
+    res = (*env)->RegisterNatives(env, cls, methods, sizeof(methods)/sizeof(*methods));
+    if (res != 0) {
+        printf("ERROR: RegisterNatives failed");
+        return -1;
+    }
+
+    return JNI_VERSION_1_4;
+}
+
